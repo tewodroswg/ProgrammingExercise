@@ -1,0 +1,32 @@
+CREATE TYPE literal_type AS OBJECT (
+    attribute_name VARCHAR2(100),
+    operator VARCHAR2(10),
+    value NUMBER
+);
+/
+
+CREATE TYPE predicate_type AS TABLE OF literal_type;
+/
+
+CREATE PROCEDURE generate_horizontal_miniterm_fragments(
+    predicates IN predicate_type,
+    fragments OUT SYS_REFCURSOR
+) 
+IS
+BEGIN
+    OPEN fragments FOR
+    SELECT *
+    FROM TABLE (
+        SELECT DISTINCT COLUMN_VALUE AS predicate
+        FROM TABLE(predicates)
+        MODEL RETURN UPDATED ROWS
+        DIMENSION BY (ROWNUM AS rn)
+        MEASURES (CAST(NULL AS predicate_type) AS predicate)
+        RULES ITERATE (100) UNTIL (ITERATION_NUMBER = 100)
+        (
+            predicate[ANY] = predicates[rn]
+        )
+    ) p
+    ORDER BY p.predicate.attribute_name;
+END generate_horizontal_miniterm_fragments;
+/
