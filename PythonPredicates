@@ -1,0 +1,30 @@
+class MinitermFragmentGenerator:
+    def __init__(self, predicates):
+        self.predicates = predicates
+
+    def generate_horizontal_miniterm_fragments(self):
+        fragments = []
+        for predicate in self.predicates:
+            for literal in predicate:
+                if not any(set(literal) <= set(fragment) for fragment in fragments):
+                    fragments.append([literal])
+                else:
+                    for fragment in fragments:
+                        if set(literal) <= set(fragment):
+                            fragment.append(literal)
+        return fragments
+
+
+Example usage of predicates:
+
+predicates = [
+    [('A', '=', 1), ('B', '=', 2), ('C', '=', 3)],
+    [('B', '=', 2), ('D', '=', 4)],
+    [('A', '=', 1), ('B', '=', 2), ('D', '=', 4)],
+    [('C', '=', 3), ('D', '=', 4)]
+]
+
+generator = MinitermFragmentGenerator(predicates)
+fragments = generator.generate_horizontal_miniterm_fragments()
+for fragment in fragments:
+    print(fragment)
